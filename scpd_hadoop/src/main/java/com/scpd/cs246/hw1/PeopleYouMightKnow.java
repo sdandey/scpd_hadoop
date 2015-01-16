@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
@@ -33,6 +35,9 @@ public class PeopleYouMightKnow {
 			if(value != null && !"".equals(value.toString().trim()))
 				userAndFriends = value.toString().split("\\s+");
 
+			if(userAndFriends.length != 2)
+				return;
+			
 			String userId = userAndFriends[0];
 			String friends = userAndFriends[1];
 
@@ -48,21 +53,58 @@ public class PeopleYouMightKnow {
 			}
 
 			URI fileURI = context.getCacheFiles()[0];
-			System.out.println("File Found! Loading File to HashMap" + fileURI.toString());
 			HashMap<String, List<String>> mapCachedDocument = Utils.getCacheFileAsHashMap(FileUtils.readLines(new File("/Users/santoshdandey/Desktop/Dropbox/stanford/cache.txt")));
 			//System.out.println("mapCachedDocument:" + mapCachedDocument.toString());
 			
 			//now perform analysis on each friend and output friendId, number of mutual friends,  mutualFriendsList, potentialMutualFriends
 			
 			UserIntersectionFriend userIntersectionFriend = null;
+			
+			List<UserIntersectionFriend> listFriends = new ArrayList<UserIntersectionFriend>();
+		
 			for (String friendId : friendsList) {
 				userIntersectionFriend = Utils.getMutualFriend(friendsList, friendId, mapCachedDocument.get(friendId));
-				System.out.println("userId:" + userId + "values " + userIntersectionFriend.toString());
-				context.write(new Text(userId), new Text(userIntersectionFriend.toString()));
+				listFriends.add(userIntersectionFriend);
+//				System.out.println("userId:" + userId + "values " + userIntersectionFriend.toString());
+//				context.write(new Text(userId), new Text(userIntersectionFriend.toString()));
 			}
+
+			
+			//Sort the list based on the mutual friends count
+			Collections.sort(listFriends,new Comparator<UserIntersectionFriend>() {
+
+				public int compare(UserIntersectionFriend o1,
+						UserIntersectionFriend o2) {
+					return o1.getMutualFriendsCount() - o2.getMutualFriendsCount();
+				}
+			});
+			
+			String  mutualFriendsSuggestions = "";
+			
+			
+			int n = 0;
+			for (UserIntersectionFriend userIntersectionFriend2 : listFriends) {
+				
+				List<String> potentialFriendsList = userIntersectionFriend2.getPotentialFriends();
+				
+				if(n == 10)
+					break;
+				
+				for (String potentialFriend : potentialFriendsList) {
+					
+					if(n == 10)
+						break;
+					
+					mutualFriendsSuggestions += potentialFriend + "(" + userIntersectionFriend2.getMutualFriendsCount() + ")     " ;
+					n++;
+				}
+				
+			}
+			
+			context.write(new Text(userId), new Text(mutualFriendsSuggestions));
 		}
 	}
-
+	
 
 	public static class Reduce extends Reducer<Text,Text,Text,Text> {
 
@@ -71,7 +113,7 @@ public class PeopleYouMightKnow {
 				) throws IOException, InterruptedException {
 			
 			for (Text mapperIntersectionOutput : mapperOutputWithMutualFriendsInfo){
-				
+				context.write(userId, new Text(mapperIntersectionOutput));
 				
 				
 			}
@@ -90,7 +132,7 @@ public class PeopleYouMightKnow {
 		job.setReducerClass(Reduce.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
-		job.addCacheFile(new URI(args[0]));
+		job.addCacheFile(new URI("/Users/santoshdandey/Desktop/Dropbox/stanford/cache.txt"));
 
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));

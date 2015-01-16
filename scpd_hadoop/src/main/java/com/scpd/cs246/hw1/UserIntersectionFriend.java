@@ -2,7 +2,7 @@ package com.scpd.cs246.hw1;
 
 import java.util.List;
 
-public class UserIntersectionFriend {
+public class UserIntersectionFriend implements Comparable<UserIntersectionFriend> {
 
 	private String friendId;
 	
@@ -99,6 +99,10 @@ public class UserIntersectionFriend {
 		} else if (!potentialFriends.equals(other.potentialFriends))
 			return false;
 		return true;
+	}
+
+	public int compareTo(UserIntersectionFriend o) {
+		return mutualFriendsCount - o.mutualFriendsCount;
 	}
 
 	
