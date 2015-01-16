@@ -46,39 +46,5 @@ public class Utils {
 		
 		return mapListOfFriendsByUserId;
 	}
-	
-	
-	public static UserIntersectionFriend serialize(String userIntersectionFriendAsString){
-	
-		if(userIntersectionFriendAsString == null || "".equals(userIntersectionFriendAsString.trim()))
-				return null;
-		
-		String[] namevaluePairs = userIntersectionFriendAsString.split("\\|");
-		
-		if(namevaluePairs.length != 4){
-			System.out.println("Intersection String wrong here");
-			return null;
-		}
-		
-		UserIntersectionFriend userIntersectionFriend = new UserIntersectionFriend();
-		
-		for (String nameValuePair : namevaluePairs) {
-				
-			
-				nameValuePair.split("\\=");
-				
-				if(nameValuePair.contains("friendId"))
-					userIntersectionFriend.setFriendId(nameValuePair.split("\\=")[1]);
-				else if(nameValuePair.contains("mutualFriendsCount"))
-					userIntersectionFriend.setMutualFriendsCount(Integer.valueOf(nameValuePair.split("\\=")[1]));
-				else if(nameValuePair.contains("mutualFriends"))
-					userIntersectionFriend.setMutualFriendsCount(Integer.valueOf(nameValuePair.split("\\=")[1]));
-				else if(nameValuePair.contains("mutualFriendsCount"))
-					userIntersectionFriend.setMutualFriendsCount(Integer.valueOf(nameValuePair.split("\\=")[1]));
-		}
-		
-		return null;
-		
-	}
-	
+
 }
