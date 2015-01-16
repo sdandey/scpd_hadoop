@@ -53,7 +53,7 @@ public class PeopleYouMightKnow {
 			}
 
 			URI fileURI = context.getCacheFiles()[0];
-			HashMap<String, List<String>> mapCachedDocument = Utils.getCacheFileAsHashMap(FileUtils.readLines(new File("/Users/santoshdandey/Desktop/Dropbox/stanford/cache.txt")));
+			HashMap<String, List<String>> mapCachedDocument = Utils.getCacheFileAsHashMap(FileUtils.readLines(new File("C://Users/v579424/Documents/Personal/cs246/cache.txt")));
 			//System.out.println("mapCachedDocument:" + mapCachedDocument.toString());
 			
 			//now perform analysis on each friend and output friendId, number of mutual friends,  mutualFriendsList, potentialMutualFriends
@@ -100,7 +100,7 @@ public class PeopleYouMightKnow {
 				}
 				
 			}
-			
+			System.out.println(userId + "   " + mutualFriendsSuggestions);
 			context.write(new Text(userId), new Text(mutualFriendsSuggestions));
 		}
 	}
