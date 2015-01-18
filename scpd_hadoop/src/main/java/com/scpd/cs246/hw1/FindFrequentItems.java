@@ -17,19 +17,48 @@ public class FindFrequentItems {
 		
 		List<String> baskets = FileUtils.readLines(new File(args[0]));
 		HashMap<String,Integer> mapSupportedItems = filterFrequentItemsBySupportThreshold(getItemCounts(baskets));
-		HashMap<String, Integer> supportedTubles =  filterFrequentItemsBySupportThreshold(generateItemPairs(baskets, 
+		HashMap<String, Integer> mapTwoItemsSets =  filterFrequentItemsBySupportThreshold(generateTwoItemPairs(baskets, 
+				toList(mapSupportedItems.keySet())));
+		HashMap<String, Integer> mapThreeItemsSets = filterFrequentItemsBySupportThreshold(genrateThreeItemPairs(baskets, 
 				toList(mapSupportedItems.keySet())));
 		
-		Set<String> keys = supportedTubles.keySet();
+
+		//System.out.println(mapTwoItemsSets.toString());
 		
+		Set<String> keys = mapThreeItemsSets.keySet();
 		for (String key : keys) {
-			System.out.println(key + "->" + supportedTubles.get(key));
+			System.out.println(key + "->" + mapThreeItemsSets.get(key));
 		}
 		
 	}
 	
 	
-	public static HashMap<String, Integer> generateItemPairs(List<String> baskets, List<String> frequentItems){
+	public static HashMap<String, Integer> genrateThreeItemPairs(List<String> baskets, List<String> frequentItems){
+		
+		HashMap<String, Integer>  mapItemPairs = new HashMap<String, Integer>();
+		
+		List<String> filteredItems;
+		
+		String pair;
+		for (String basketLine : baskets) {
+			filteredItems=filterFrequentItems(basketLine.split("\\s+"), frequentItems);
+			if(filteredItems.size()>=3){
+				for(int i=0;i<filteredItems.size();i++)
+					for(int j=i+1; j<filteredItems.size();j++)
+						for(int k=j+1; k<filteredItems.size();k++){
+							pair = i+","+j+","+k;
+							
+							if(mapItemPairs.containsKey(pair))
+								mapItemPairs.put(pair, mapItemPairs.get(pair) + 1);
+							else
+								mapItemPairs.put(pair, 1);
+						}
+			}
+		}
+		return mapItemPairs;
+	}
+	
+	public static HashMap<String, Integer> generateTwoItemPairs(List<String> baskets, List<String> frequentItems){
 		
 		HashMap<String, Integer>  mapItemPairs = new HashMap<String, Integer>();
 		
@@ -40,7 +69,7 @@ public class FindFrequentItems {
 			filteredItems=filterFrequentItems(basketLine.split("\\s+"), frequentItems);
 			if(filteredItems.size() >=2){
 				for(int i = 0; i< filteredItems.size(); i++){
-					for(int j=i;j<filteredItems.size();j++){
+					for(int j=i+1;j<filteredItems.size();j++){
 						
 						pair = i+","+j;
 						
