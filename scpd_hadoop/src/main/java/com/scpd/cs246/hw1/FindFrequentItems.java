@@ -3,6 +3,7 @@ package com.scpd.cs246.hw1;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -19,20 +20,28 @@ public class FindFrequentItems {
 		HashMap<String,Integer> mapSupportedItems = filterFrequentItemsBySupportThreshold(getItemCounts(baskets));
 		HashMap<String, Integer> mapTwoItemsSets =  filterFrequentItemsBySupportThreshold(generateTwoItemPairs(baskets, 
 				toList(mapSupportedItems.keySet())));
+		
+		System.out.println(mapTwoItemsSets.toString());
+		
 		HashMap<String, Integer> mapThreeItemsSets = filterFrequentItemsBySupportThreshold(genrateThreeItemPairs(baskets, 
 				toList(mapSupportedItems.keySet())));
 		
-
-		//System.out.println(mapTwoItemsSets.toString());
+		//HashMap<String,Integer> potentialRuleMatchItemSets = findPotentialRuleMatchItemSets(mapTwoItemsSets.keySet(),
+			//	findBasketsWithItemSets(mapTwoItemsSets, baskets));
 		
-		Set<String> keys = mapThreeItemsSets.keySet();
-		for (String key : keys) {
-			System.out.println(key + "->" + mapThreeItemsSets.get(key));
-		}
+		//System.out.println(potentialRuleMatchItemSets.toString());
 		
 	}
 	
 	
+	public static HashMap<String, Double> findConfidenceScoreForItemSets(HashMap<String, Integer> mapItemSets,
+			HashMap<String, Integer> mapSupportedItemCounts){
+		
+		return null;
+	}
+	
+	
+
 	public static HashMap<String, Integer> genrateThreeItemPairs(List<String> baskets, List<String> frequentItems){
 		
 		HashMap<String, Integer>  mapItemPairs = new HashMap<String, Integer>();
@@ -46,7 +55,7 @@ public class FindFrequentItems {
 				for(int i=0;i<filteredItems.size();i++)
 					for(int j=i+1; j<filteredItems.size();j++)
 						for(int k=j+1; k<filteredItems.size();k++){
-							pair = i+","+j+","+k;
+							pair = filteredItems.get(i)+","+filteredItems.get(j)+","+filteredItems.get(k);
 							
 							if(mapItemPairs.containsKey(pair))
 								mapItemPairs.put(pair, mapItemPairs.get(pair) + 1);
@@ -71,12 +80,12 @@ public class FindFrequentItems {
 				for(int i = 0; i< filteredItems.size(); i++){
 					for(int j=i+1;j<filteredItems.size();j++){
 						
-						pair = i+","+j;
+						pair = filteredItems.get(i)+","+filteredItems.get(j);
 						
 						if(mapItemPairs.containsKey(pair))
 							mapItemPairs.put(pair, mapItemPairs.get(pair) + 1);
 						else
-							mapItemPairs.put(i+","+j, 1);
+							mapItemPairs.put(pair, 1);
 					}
 				}
 			}
