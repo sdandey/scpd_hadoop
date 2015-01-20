@@ -4,11 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import org.apache.commons.io.FileUtils;
 
 public class FindFrequentItems {
@@ -21,26 +22,141 @@ public class FindFrequentItems {
 		HashMap<String, Integer> mapTwoItemsSets =  filterFrequentItemsBySupportThreshold(generateTwoItemPairs(baskets, 
 				toList(mapSupportedItems.keySet())));
 		
-		System.out.println(mapTwoItemsSets.toString());
+		//System.out.println(mapTwoItemsSets.toString());
 		
 		HashMap<String, Integer> mapThreeItemsSets = filterFrequentItemsBySupportThreshold(genrateThreeItemPairs(baskets, 
 				toList(mapSupportedItems.keySet())));
 		
-		//HashMap<String,Integer> potentialRuleMatchItemSets = findPotentialRuleMatchItemSets(mapTwoItemsSets.keySet(),
-			//	findBasketsWithItemSets(mapTwoItemsSets, baskets));
+		ArrayList<Entry<String,Double>> associationRuleConfidenceForTwoItemSets = findConfidenceScoreForTwoItemSets(mapTwoItemsSets, mapSupportedItems);
+		printTop5ItemSets(associationRuleConfidenceForTwoItemSets);
 		
-		//System.out.println(potentialRuleMatchItemSets.toString());
+		ArrayList<Entry<String,Double>> associationRuleConfidenceForThreeItemSets = findConfidenceScoreForThreeItemSets(mapTwoItemsSets, mapThreeItemsSets);
+		printTop5ItemSets(associationRuleConfidenceForThreeItemSets);
 		
 	}
 	
 	
-	public static HashMap<String, Double> findConfidenceScoreForItemSets(HashMap<String, Integer> mapItemSets,
-			HashMap<String, Integer> mapSupportedItemCounts){
+	public static void printTop5ItemSets(ArrayList<Entry<String,Double>> sortedAssociateReules){
 		
-		return null;
+		int i=1;
+        for (Entry<String, Double> entry : sortedAssociateReules) {
+        	
+        	if(i>5)
+        		break;
+        	
+        	System.out.println(entry.getKey() + "(" + entry.getValue() + ")");
+        	
+        	i++;
+		}
+	}
+	
+	public static ArrayList<Entry<String,Double>> findConfidenceScoreForThreeItemSets(HashMap<String, Integer> twoItemSets,
+			HashMap<String,Integer> threeItemSets){
+	
+		
+		HashMap<String, Double> associationRules = new HashMap<String, Double>();
+		
+		Set<String> itemPairs = threeItemSets.keySet();
+		
+		List<String> pairedItems;
+		for (String pair : itemPairs) {
+			
+			pairedItems = new ArrayList<String>();
+			pairedItems = Arrays.asList(pair.split(","));
+			//Collections.sort(pairedItems);
+			//find confidence for the A->B and B->A
+			
+			if(pairedItems.size() == 3){
+				
+				if(twoItemSets.containsKey(pairedItems.get(0) +"," + pairedItems.get(1))) {
+			//		System.out.println(pair + ":" + threeItemSets.get(pair) + pairedItems.get(0)+","+ 
+			//				pairedItems.get(1) +":"+ twoItemSets.get(pairedItems.get(0) +"," + pairedItems.get(1)) );
+					associationRules.put("(" + pairedItems.get(0) +"," + pairedItems.get(1) + ")->" + pairedItems.get(2), ((double)threeItemSets.get(pair))
+							/twoItemSets.get(pairedItems.get(0) +"," + pairedItems.get(1)));
+
+				}
+				
+				if(twoItemSets.containsKey(pairedItems.get(1) +"," + pairedItems.get(2))) {
+			//		System.out.println("Three Pairs Count:" + pair + ":" + threeItemSets.get(pair) + "\n Two Pairs Count" + pairedItems.get(1)+","+ 
+			//				pairedItems.get(2) +":"+ twoItemSets.get(pairedItems.get(1) +"," + pairedItems.get(2)) );
+
+					associationRules.put("(" + pairedItems.get(1) +"," + pairedItems.get(2) + ")->" + pairedItems.get(0), ((double)threeItemSets.get(pair))
+						/twoItemSets.get(pairedItems.get(1) +"," + pairedItems.get(2)));
+				}	
+			}
+		}
+		
+		ArrayList<Entry<String, Double>> sortedAssociateReules = new ArrayList<Entry<String, Double>>();
+        for (Entry<String, Double> entry : associationRules.entrySet()) {
+        	sortedAssociateReules.add(entry);
+        }
+
+        Collections.sort(sortedAssociateReules, new Comparator<Entry<String, Double>>() {
+            public int compare(Entry<String, Double> o1, Entry<String, Double> o2) {
+                return o2.getValue().compareTo(o1.getValue());
+            }
+        });
+		
+        
+        
+        return sortedAssociateReules;
 	}
 	
 	
+	public static ArrayList<Entry<String,Double>> findConfidenceScoreForTwoItemSets(HashMap<String, Integer> twoItemSets,
+			HashMap<String, Integer> itemCounts){
+	
+		
+		HashMap<String, Double> associationRules = new HashMap<String, Double>();
+		
+		Set<String> itemPairs = twoItemSets.keySet();
+		
+		List<String> pairedItems;
+		for (String pair : itemPairs) {
+			
+			pairedItems = Arrays.asList(pair.split(","));
+			Collections.sort(pairedItems);
+			//find confidence for the A->B and B->A
+			
+			if(pairedItems.size() == 2){
+				associationRules.put(pairedItems.get(0) + "->" + pairedItems.get(1), ((double)twoItemSets.get(pair))/itemCounts.get(pairedItems.get(0)));
+				associationRules.put(pairedItems.get(0) + "->" + pairedItems.get(0), ((double)twoItemSets.get(pair))/itemCounts.get(pairedItems.get(1)));
+			}
+		}
+		
+		ArrayList<Entry<String, Double>> sortedAssociateReules = new ArrayList<Entry<String, Double>>();
+        for (Entry<String, Double> entry : associationRules.entrySet()) {
+        	sortedAssociateReules.add(entry);
+        }
+
+        Collections.sort(sortedAssociateReules, new Comparator<Entry<String, Double>>() {
+            public int compare(Entry<String, Double> o1, Entry<String, Double> o2) {
+                return o2.getValue().compareTo(o1.getValue());
+            }
+        });
+		
+        
+        
+        return sortedAssociateReules;
+	}
+	
+	
+	class ValueComparator implements Comparator<String> {
+
+	    HashMap<String, Double> base;
+	    public ValueComparator(HashMap<String, Double> base) {
+	        this.base = base;
+	    }
+
+	    // Note: this comparator imposes orderings that are inconsistent with equals.    
+	    public int compare(String a, String b) {
+	        if (base.get(a) >= base.get(b)) {
+	            return -1;
+	        } else {
+	            return 1;
+	        } // returning 0 would merge keys
+	    }
+	}
 
 	public static HashMap<String, Integer> genrateThreeItemPairs(List<String> baskets, List<String> frequentItems){
 		
@@ -146,3 +262,4 @@ public class FindFrequentItems {
 	}
 	
 }
+ 
