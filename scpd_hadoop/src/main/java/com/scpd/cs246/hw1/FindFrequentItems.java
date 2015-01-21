@@ -59,30 +59,28 @@ public class FindFrequentItems {
 		Set<String> itemPairs = threeItemSets.keySet();
 		
 		List<String> pairedItems;
+		
+		Integer denomonitaor1; 
+		Integer denominiator2;
 		for (String pair : itemPairs) {
 			
 			pairedItems = new ArrayList<String>();
 			pairedItems = Arrays.asList(pair.split(","));
-			//Collections.sort(pairedItems);
-			//find confidence for the A->B and B->A
+			Collections.sort(pairedItems);
+			//find confidence for the A,B->C and B,A->C
 			
 			if(pairedItems.size() == 3){
 				
-				if(twoItemSets.containsKey(pairedItems.get(0) +"," + pairedItems.get(1))) {
-			//		System.out.println(pair + ":" + threeItemSets.get(pair) + pairedItems.get(0)+","+ 
-			//				pairedItems.get(1) +":"+ twoItemSets.get(pairedItems.get(0) +"," + pairedItems.get(1)) );
-					associationRules.put("(" + pairedItems.get(0) +"," + pairedItems.get(1) + ")->" + pairedItems.get(2), ((double)threeItemSets.get(pair))
-							/twoItemSets.get(pairedItems.get(0) +"," + pairedItems.get(1)));
+				if(twoItemSets.containsKey(pairedItems.get(0) +"," + pairedItems.get(1)) || twoItemSets.containsKey(pairedItems.get(1) +"," + pairedItems.get(0))) {
+					
+					denomonitaor1 = twoItemSets.containsKey(pairedItems.get(0) +"," + pairedItems.get(1))?twoItemSets.get(pairedItems.get(0) +"," + pairedItems.get(1)):0;
+					denominiator2 = twoItemSets.containsKey(pairedItems.get(1) +"," + pairedItems.get(0))?twoItemSets.get(pairedItems.get(1) +"," + pairedItems.get(0)):0;
+					
+					
+					associationRules.put("(" + pairedItems.get(0) +"," + pairedItems.get(1) + ")->" + pairedItems.get(2), ((double)threeItemSets.get(pair))/(denomonitaor1 + denominiator2));
+							
 
 				}
-				
-				if(twoItemSets.containsKey(pairedItems.get(1) +"," + pairedItems.get(2))) {
-			//		System.out.println("Three Pairs Count:" + pair + ":" + threeItemSets.get(pair) + "\n Two Pairs Count" + pairedItems.get(1)+","+ 
-			//				pairedItems.get(2) +":"+ twoItemSets.get(pairedItems.get(1) +"," + pairedItems.get(2)) );
-
-					associationRules.put("(" + pairedItems.get(1) +"," + pairedItems.get(2) + ")->" + pairedItems.get(0), ((double)threeItemSets.get(pair))
-						/twoItemSets.get(pairedItems.get(1) +"," + pairedItems.get(2)));
-				}	
 			}
 		}
 		

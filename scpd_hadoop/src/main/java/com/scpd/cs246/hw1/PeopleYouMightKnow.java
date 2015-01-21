@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -40,11 +42,12 @@ public class PeopleYouMightKnow {
 
 			if(userAndFriends.length != 2)
 				return;
-			//String userId = userAndFriends[0];
+			String userId = userAndFriends[0];
 			String[] friends = userAndFriends[1].split(",");
 			
 			for (int i = 0; i < friends.length; i ++) {
 				//suppose A->B,C,D,E Then (A,B,1) (A,C,1) (A,D,1) (A,E,1) are first degree friends
+				context.write(new IntWritable(Integer.valueOf(userId)), new Text("F,"+friends[i]));
 				for(int j=i+1; j< friends.length; j++){
 					//Suppose A->B,C,D,E  B can be friends with c (B,C,2) and c can be friends with d (C,B,2)
 					context.write(new IntWritable(Integer.valueOf(friends[i])), new Text(friends[j]));
@@ -56,30 +59,49 @@ public class PeopleYouMightKnow {
 	
 	public static class Reduce extends Reducer<IntWritable,Text,IntWritable,Text> {
 
-		public void reduce(IntWritable userId, Iterable<Text> potentialFriends,
+		public void reduce(IntWritable userId, Iterable<Text> mapperOutput,
 				Context context
 				) throws IOException, InterruptedException {
 			
 			
-			HashMap<String, Integer> potentialFriendsCounts = new HashMap<String, Integer>();
 			
-			for (Text text : potentialFriends) {
+			List<Integer> friends = new ArrayList<Integer>();
+			HashMap<Integer, Integer> potentialFriendsCounts = new HashMap<Integer, Integer>();
+			
+			
+			String value;
+			for (Text text : mapperOutput) {
 				
-				if(potentialFriendsCounts.containsKey(text.toString())){
-					int count = potentialFriendsCounts.get(text.toString());
-					potentialFriendsCounts.put(text.toString(), count + 1);
+				value = text.toString();
+				
+				if(value.split(",").length == 2){
+					friends.add(Integer.valueOf(value.split(",")[1]));
 				}
-				else
-					potentialFriendsCounts.put(text.toString(), 1);
+				else {
+					if(potentialFriendsCounts.containsKey(value)){
+						potentialFriendsCounts.put(Integer.valueOf(value), potentialFriendsCounts.get(value) + 1);
+					}
+					else
+						potentialFriendsCounts.put(Integer.valueOf(value), 1);
+				}
+				
 			}
+			
+			//System.out.println("Friends List:" + friends);
 		
-			 ArrayList<Entry<String, Integer>> potentialFriendsByHighesCount = new ArrayList<Entry<String, Integer>>();
-	            for (Entry<String, Integer> entry : potentialFriendsCounts.entrySet()) {
+			//Remove friends from potentialFriendsCount
+			for (Integer friend : friends) {
+				if(potentialFriendsCounts.containsKey(friend))
+					potentialFriendsCounts.remove(friend);
+			}
+			
+			 ArrayList<Entry<Integer, Integer>> potentialFriendsByHighesCount = new ArrayList<Entry<Integer, Integer>>();
+	            for (Entry<Integer, Integer> entry : potentialFriendsCounts.entrySet()) {
 	            	potentialFriendsByHighesCount.add(entry);
 	            }
 
-			 Collections.sort(potentialFriendsByHighesCount, new Comparator<Entry<String, Integer>>() {
-	                public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
+			 Collections.sort(potentialFriendsByHighesCount, new Comparator<Entry<Integer, Integer>>() {
+	                public int compare(Entry<Integer, Integer> o1, Entry<Integer, Integer> o2) {
 	                    return o2.getValue().compareTo(o1.getValue());
 	                }
 	            });
@@ -88,7 +110,7 @@ public class PeopleYouMightKnow {
 			 String friendSuggestions = "\t";
 			 
 			 int n = 0;
-			 for (Entry<String, Integer> entry : potentialFriendsByHighesCount) {
+			 for (Entry<Integer, Integer> entry : potentialFriendsByHighesCount) {
 				 if(n<10)
 					 friendSuggestions += entry.getKey() + "(" + entry.getValue() + ")" + ",";
 				 else
